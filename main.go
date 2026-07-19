@@ -1,35 +1,27 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"strconv"
+	"time"
 )
 
-type Logger struct{}
-
-func (l Logger) Log(msg string) {
-	fmt.Printf("[log] %s\n", msg)
-}
-
-type Counter struct {
-	Logger
-	count int
-}
-
-func (c *Counter) Inc() {
-	c.count++
-	c.Logger.Log(fmt.Sprint(c.count))
-}
-
 func main() {
-	sc := bufio.NewScanner(os.Stdin)
-	sc.Scan()
-	n, _ := strconv.Atoi(sc.Text())
-	var c Counter
-	for i := 0; i < n; i++ {
-		c.Inc()
+	ch := make(chan string, 2)
+	go func() {
+		time.Sleep(30 * time.Millisecond)
+		ch <- "slow"
+	}()
+	go func() {
+		time.Sleep(10 * time.Millisecond)
+		ch <- "fast"
+	}()
+	// select to receive first, with 100ms timeout
+	select {
+	case v := <-ch:
+		fmt.Print(v)
+	case <-time.After(time.Duration(time.Millisecond * 100)):
+		fmt.Print("timeout")
+
 	}
-	_ = c
+	_ = fmt.Print
 }
